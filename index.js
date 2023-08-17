@@ -15,6 +15,10 @@ app.get("/", (req, res)=>  {
     res.render("index", { name: "Himanshu"});
 });
 
+app.get("/add", (req, res)=>  {
+    res.render("index", { name: "Himanshu"});
+});
+
 app.get("/success", (req, res) => {
     res.render("success");
 });
