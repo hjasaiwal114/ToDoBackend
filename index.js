@@ -1,6 +1,7 @@
 import express  from "express";
 import mongoose from "mongoose";
 import path from 'path';
+import cookieParser from "cookie-parser";
 
 
 mongoose
@@ -23,23 +24,41 @@ const app = express();
 // Using middle ware
 app.use(express.static(path.join(path.resolve(), "public")));
 app.use(express.urlencoded({ extended: true}));
+app.use(cookieParser());
 
 // setting up View engine
 app.set("view engine", "ejs");
 
-app.get("/", (req, res)=>  {
-    console.log(req.cookies);
+const isAUthenticated = (req, res, next) => {
+    const { token } = req.cookies;
+    if (token) {
+        next();
+    }else {
+        res.render("login");
+    }
+};
 
-    res.render("login", );
+app.get("/", isAUthenticated, (req, res) =>  {
+  res.render("logout");
 });
 
-app.post('login', (req, res)=>{
+
+app.post('/login', (req, res)=>{
     res.cookie("token", "iamin" ,{
         httpOnly: true,
-        expire: new Date(Date.now() + 60 * 1000),
+        expires: new Date(Date.now() + 60 * 1000),
     });
     res.redirect("/");
 });
+
+app.get("/logout", (req, res) => {
+    res.cookie("token", null, {
+        httpOnly: true,
+        expires: new Date(Date.now() ),
+    });
+    res.redirect("/");
+});
+
 
 app.get("/success", (req, res) => {
     res.render("success");
