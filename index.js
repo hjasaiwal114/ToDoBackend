@@ -28,10 +28,18 @@ app.use(express.urlencoded({ extended: true}));
 app.set("view engine", "ejs");
 
 app.get("/", (req, res)=>  {
-    res.render("index", { name: "Himanshu"});
+    console.log(req.cookies);
+
+    res.render("login", );
 });
 
-
+app.post('login', (req, res)=>{
+    res.cookie("token", "iamin" ,{
+        httpOnly: true,
+        expire: new Date(Date.now() + 60 * 1000),
+    });
+    res.redirect("/");
+});
 
 app.get("/success", (req, res) => {
     res.render("success");
