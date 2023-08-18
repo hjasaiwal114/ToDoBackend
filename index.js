@@ -11,12 +11,12 @@ mongoose
     .then(() => console.log("Database Connected"))
     .catch((e) => console.log(e));
 
-const messageSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({
     name : String,
     email: String,
 });
 
-const Message = mongoose.model("Message", messageSchema)
+const User = mongoose.model("User", userSchema)
 
 const app = express();
 
@@ -43,8 +43,17 @@ app.get("/", isAUthenticated, (req, res) =>  {
 });
 
 
-app.post('/login', (req, res)=>{
-    res.cookie("token", "iamin" ,{
+app.post('/login', async (req, res)=>{
+    const {name , email} = req.body;
+
+    const user = await User.create({
+        name,
+        email,
+    });
+
+
+
+    res.cookie("token", user._id ,{
         httpOnly: true,
         expires: new Date(Date.now() + 60 * 1000),
     });
@@ -60,24 +69,7 @@ app.get("/logout", (req, res) => {
 });
 
 
-app.get("/success", (req, res) => {
-    res.render("success");
-});
 
-
-app.post("/contact", async(req, res) => {
-
-  const {name, email} = req.body;
-
-  await Message.create({ name, email});
-  res.redirect("/success");
-});
-
-app.get("/users", (req, res) => {
-    res.json({
-        users,
-    });
-});
 
 app.listen(5000, () => {
     console.log("server is working");
