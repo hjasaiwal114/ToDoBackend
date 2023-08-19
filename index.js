@@ -15,6 +15,7 @@ mongoose
 const userSchema = new mongoose.Schema({
     name : String,
     email: String,
+    password: String,
 });
 
 const User = mongoose.model("User", userSchema)
@@ -47,21 +48,26 @@ app.get("/", isAUthenticated, (req, res) =>  {
   res.render("logout", {name: req.user.name});
 });
 
+app.get("/login", (req, res) => {
+    res.render("login");
+});
+
 app.get("/register", (req, res)=> {
     res.render("register");
 });
 
-app.post('/login', async (req, res)=>{
-    const {name , email} = req.body;
+app.post('/register', async (req, res)=>{
+    const {name , email, password} = req.body;
 
     let user  = await User.findOne({email});
-    if(!user){
-      return res.redirect("/register");
+    if(user){
+      return res.redirect("/login");
     }
 
     user = await User.create({
         name,
         email,
+        password,
     });
 
     const token = jwt.sign({_id:user._id}, "khdgwefwegyi");
