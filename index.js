@@ -2,6 +2,7 @@ import express  from "express";
 import mongoose from "mongoose";
 import path from 'path';
 import cookieParser from "cookie-parser";
+import jwt from "jsonwebtoken";
 
 
 mongoose
@@ -29,9 +30,13 @@ app.use(cookieParser());
 // setting up View engine
 app.set("view engine", "ejs");
 
-const isAUthenticated = (req, res, next) => {
+const isAUthenticated = async (req, res, next) => {
     const { token } = req.cookies;
     if (token) {
+        const decode = jwt.verify(token, "khdgwefwegyi" );
+
+        req.user = await User.findById(decode._id);
+
         next();
     }else {
         res.render("login");
@@ -39,19 +44,28 @@ const isAUthenticated = (req, res, next) => {
 };
 
 app.get("/", isAUthenticated, (req, res) =>  {
-  res.render("logout");
+  res.render("logout", {name: req.user.name});
 });
 
+app.get("/register", (req, res)=> {
+    res.render("register");
+});
 
 app.post('/login', async (req, res)=>{
     const {name , email} = req.body;
 
-    const user = await User.create({
+    let user  = await User.findOne({email});
+    if(!user){
+      return res.redirect("/register");
+    }
+
+    user = await User.create({
         name,
         email,
     });
 
-
+    const token = jwt.sign({_id:user._id}, "khdgwefwegyi");
+    console.log(token )
 
     res.cookie("token", user._id ,{
         httpOnly: true,
