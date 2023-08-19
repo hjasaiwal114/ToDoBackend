@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import path from 'path';
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 
 
 mongoose
@@ -52,44 +53,60 @@ app.get("/login", (req, res) => {
     res.render("login");
 });
 
-app.get("/register", (req, res)=> {
+app.get("/register", (req, res) => {
     res.render("register");
 });
 
-app.post('/register', async (req, res)=>{
-    const {name , email, password} = req.body;
+app.post("/login", async (req, res) => {
+    const {email, paasword} = req.body;
 
-    let user  = await User.findOne({email});
-    if(user){
-      return res.redirect("/login");
+    let user = await User.findOne({ email });
+
+    if (!user) return res.redirect("/register");
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch)
+        return res.render("login", { email, message: "Incorrect Password" });
+    const token = jwt.sign({ _id: user._id}, "sdjasdbajsdbjasd");
+
+    res.cookie("token", token, {
+        httpOnly: true,
+        expires: new Date(Date.now())
+    });
+    res.redirect("/");
+});
+
+app.post("/register", async (req, res) => {
+    const { name, email, password } = req.body;
+
+    let user = await User.findOne({ email });
+    if (user) {
+        return res.redirect("/login");
     }
+    const hashedPassword = await bycrypt.hash(password, 10);
 
     user = await User.create({
         name,
         email,
-        password,
-    });
+        password: hashedPassword,
+    })
+    const token = jwt.sign({_id: user._id }, "sdjasdbajsdbjasd");
 
-    const token = jwt.sign({_id:user._id}, "khdgwefwegyi");
-    console.log(token )
-
-    res.cookie("token", user._id ,{
+    res.cookie("token", token, {
         httpOnly: true,
-        expires: new Date(Date.now() + 60 * 1000),
+        expire: new Date(Date.now()+ 60*1000),
     });
-    res.redirect("/");
+    res.redirect("/")
 });
 
 app.get("/logout", (req, res) => {
     res.cookie("token", null, {
         httpOnly: true,
-        expires: new Date(Date.now() ),
+        expires: new Date(Date.now()),
     });
-    res.redirect("/");
-});
-
-
-
+    res.redirect("/")
+})
 
 app.listen(5000, () => {
     console.log("server is working");
